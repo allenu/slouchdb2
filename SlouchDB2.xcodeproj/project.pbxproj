@@ -53,6 +53,7 @@
 		B7BC070922B6175000EE9A08 /* SlouchDB2 */ = {
 			isa = PBXGroup;
 			children = (
+				B7BC071A22B6175B00EE9A08 /* Core */,
 				B7BC070A22B6175000EE9A08 /* AppDelegate.swift */,
 				B7BC070C22B6175000EE9A08 /* ViewController.swift */,
 				B7BC070E22B6175100EE9A08 /* Assets.xcassets */,
@@ -61,6 +62,13 @@
 				B7BC071422B6175100EE9A08 /* SlouchDB2.entitlements */,
 			);
 			path = SlouchDB2;
+			sourceTree = "<group>";
+		};
+		B7BC071A22B6175B00EE9A08 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Core;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
