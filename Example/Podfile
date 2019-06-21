@@ -1,0 +1,9 @@
+use_frameworks!
+
+target 'PeopleApp' do
+  pod 'SlouchDB2', :path => '../'
+end
+
+target 'PeopleAppTests' do
+  pod 'SlouchDB2', :path => '../'
+end

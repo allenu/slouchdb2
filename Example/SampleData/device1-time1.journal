@@ -1,0 +1,34 @@
+{
+  "diffs" : [
+    {
+      "properties" : {
+        "name" : "Ape",
+        "age" : 31,
+        "weight" : 130
+      },
+      "timestamp" : "2019-06-01T05:15:36Z",
+      "identifier" : "ape",
+      "diffType" : "add"
+    },
+    {
+      "properties" : {
+        "name" : "Aardvark",
+        "age" : 69,
+        "weight" : 100
+      },
+      "timestamp" : "2019-06-02T05:15:38Z",
+      "identifier" : "aardvark",
+      "diffType" : "add"
+    },
+    {
+      "properties" : {
+        "name" : "Ape 2"
+      },
+      "timestamp" : "2019-06-03T05:15:36Z",
+      "identifier" : "ape",
+      "diffType" : "update"
+    }
+  ],
+  "identifier" :"device1"
+}
+

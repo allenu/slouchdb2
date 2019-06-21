@@ -1,0 +1,6 @@
+framework module SlouchDB2 {
+  umbrella header "SlouchDB2-umbrella.h"
+
+  export *
+  module * { export * }
+}

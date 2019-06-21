@@ -1,5 +1,7 @@
 # SlouchDB2
 
+** WARNING: This is still very much a work in progress. **
+
 This is a rewrite of SlouchDB https://github.com/allenu/slouchdb
 
 SlouchDB2 is a journal-based NoSQL-like, distributed single-user database for
@@ -24,7 +26,7 @@ Apple-based projects (Mac and iOS).
   is a low likelihood of conflicts when two devices make a modification to the same
   object.
 
-The goal of rewriting SlouchDB as SlouchDB2 are as follows:
+The goals of rewriting SlouchDB as SlouchDB2 are as follows:
 
 * Simplify the original implementation. The original was written in a more complex,
   imperative style in places. Since then, I've moved to writing in a more functional,
@@ -41,3 +43,6 @@ The goal of rewriting SlouchDB as SlouchDB2 are as follows:
   That is, it did not fully consider that syncing across devices may not be done on 
   a regular schedule, and that snapshots of the database may not have been optimized
   for this irregular schedule.
+
+* Better documentation overall.
+

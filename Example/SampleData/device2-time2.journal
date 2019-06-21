@@ -1,0 +1,31 @@
+{
+  "diffs" : [
+    {
+      "properties" : {
+        "name" : "Bart",
+        "weight" : 45
+      },
+      "timestamp" : "2019-06-04T05:15:36Z",
+      "identifier" : "bart",
+      "diffType" : "add"
+    },
+    {
+      "properties" : {
+        "name" : "Aardvark 2"
+      },
+      "timestamp" : "2019-06-05T05:15:38Z",
+      "identifier" : "aardvark",
+      "diffType" : "update"
+    },
+    {
+      "properties" : {
+        "name" : "Barney"
+      },
+      "timestamp" : "2019-06-08T05:15:38Z",
+      "identifier" : "barney",
+      "diffType" : "add"
+    }
+  ],
+  "identifier" :"device2"
+}
+

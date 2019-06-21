@@ -1,0 +1,6 @@
+framework module Pods_PeopleAppTests {
+  umbrella header "Pods-PeopleAppTests-umbrella.h"
+
+  export *
+  module * { export * }
+}
