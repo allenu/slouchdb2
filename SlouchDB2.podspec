@@ -32,6 +32,7 @@ as the sync mechanism.
   s.osx.deployment_target = '10.14'
 
   s.source_files = 'SlouchDB2/Source/**/*'
+  s.swift_versions = ['4.0']
   
   # s.resource_bundles = {
   #   'SlouchDB2' => ['SlouchDB2/Assets/*.png']
