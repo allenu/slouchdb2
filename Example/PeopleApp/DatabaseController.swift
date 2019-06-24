@@ -61,7 +61,6 @@ class DatabaseController {
             Person.agePropertyKey : .int(person.age),
             Person.weightPropertyKey : .int(person.weight)
         ]
-        let now = Date()
         database.add(identifier: person.identifier, properties: properties)
     }
     

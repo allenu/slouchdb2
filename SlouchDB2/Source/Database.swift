@@ -163,7 +163,7 @@ public class Database {
         // Find the first diff that is newer than the timestamp in each database
         // Filter out journals that don't have any entries newer than timestamp
         let filteredJournals = journals.filter({ journal in
-            if let firstDiff = journal.diffs.first(where: { $0.timestamp > timestamp }) {
+            if journal.diffs.first(where: { $0.timestamp > timestamp }) != nil {
                 return true
             } else {
                 return false

@@ -105,7 +105,6 @@ class Document: NSDocument {
         
         var snapshot: DatabaseSnapshot?
         var localJournal: Journal?
-        var localMetadata: JournalMetadata?
         
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -125,11 +124,6 @@ class Document: NSDocument {
                     case "local.journal":
                         if let localJournalData = fileWrapper.regularFileContents {
                             localJournal = try? decoder.decode(Journal.self, from: localJournalData)
-                        }
-
-                    case "local.metadata":
-                        if let localMetadataData = fileWrapper.regularFileContents {
-                            localMetadata = try? decoder.decode(JournalMetadata.self, from: localMetadataData)
                         }
 
                     default:
@@ -275,7 +269,6 @@ class Document: NSDocument {
         // - from list above, do a copy to local cache
         var updatedJournals: [Journal] = []
         fetchedRemoteJournalMetadata.forEach { keyValue in
-            let remoteIdentifier = keyValue.key
             let fetchedRemoteJournalMetadata = keyValue.value
             
             let shouldPullJournal: Bool
@@ -310,8 +303,6 @@ class Document: NSDocument {
         
         // 3. Do sync
         if updatedJournals.count > 0 {
-            let oldSnapshot = databaseController.database.snapshot
-            
             let workingTailSnapshots = Array(tailSnapshots.values)
             
             let mergeResult = Database.merge(database: databaseController.database,
