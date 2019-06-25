@@ -49,8 +49,8 @@ class Document: NSDocument {
         let localMetadataFileWrapper = FileWrapper(regularFileWithContents: localMetadata)
         
         let localFolderWrapper = FileWrapper(directoryWithFileWrappers: ["local.snapshot" : localSnapshotFileWrapper,
-                                                                             "local.journal" : journalFileWrapper,
-                                                                             "local.metadata" : localMetadataFileWrapper ])
+                                                                         "local.journal" : journalFileWrapper,
+                                                                         "local.metadata" : localMetadataFileWrapper ])
 
         var remoteFolderFileWrappers: [String : FileWrapper] = [:]
         remoteJournalMetadata.forEach { keyValue in
@@ -305,9 +305,9 @@ class Document: NSDocument {
         if updatedJournals.count > 0 {
             let workingTailSnapshots = Array(tailSnapshots.values)
             
-            let mergeResult = Database.merge(database: databaseController.database,
-                                             journals: Array(remoteJournals.values),
-                                             tailSnapshots: workingTailSnapshots)
+            let mergeResult = Merge(database: databaseController.database,
+                                    journals: Array(remoteJournals.values),
+                                    tailSnapshots: workingTailSnapshots)
             
             if let newDatabase = mergeResult.database {
                 databaseController.database = newDatabase

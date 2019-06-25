@@ -116,7 +116,7 @@ class PeopleAppTests: XCTestCase {
         let remoteJournal = Journal(identifier: "second")
         remoteJournal.diffs.append(JournalDiff(diffType: .add, identifier: "obj1", timestamp: now, properties: ["age": .int(37)]))
         
-        let mergeResult = Database.merge(database: blankDatabase, journals: [blankJournal, remoteJournal], tailSnapshots: [blankSnapshot])
+        let mergeResult = Merge(database: blankDatabase, journals: [blankJournal, remoteJournal], tailSnapshots: [blankSnapshot])
         let newDatabase = mergeResult.database!
         
         XCTAssertEqual(newDatabase.objects()["obj1"]!.properties["age"], JSONValue.int(37))
@@ -129,7 +129,7 @@ class PeopleAppTests: XCTestCase {
         updatedRemoteJournal.diffs.append(JournalDiff(diffType: .add, identifier: "obj1", timestamp: now, properties: ["age": .int(37)]))
         updatedRemoteJournal.diffs.append(JournalDiff(diffType: .add, identifier: "obj2", timestamp: now.addingTimeInterval(1.0), properties: ["age": .int(16)]))
 
-        let updatedMergeResult = Database.merge(database: newDatabase, journals: [blankJournal, updatedRemoteJournal], tailSnapshots: [newDatabase.snapshot])
+        let updatedMergeResult = Merge(database: newDatabase, journals: [blankJournal, updatedRemoteJournal], tailSnapshots: [newDatabase.snapshot])
         let updatedDatabase = updatedMergeResult.database!
         XCTAssertEqual(updatedDatabase.objects().count, 2)
         XCTAssertEqual(updatedDatabase.objects()["obj1"]!.properties["age"], JSONValue.int(37))
@@ -148,7 +148,7 @@ class PeopleAppTests: XCTestCase {
         let remoteJournal = Journal(identifier: "second")
         remoteJournal.diffs.append(JournalDiff(diffType: .update, identifier: "obj1", timestamp: now, properties: ["age": .int(37)]))
 
-        let mergeResult = Database.merge(database: blankDatabase, journals: [blankJournal, remoteJournal], tailSnapshots: [blankSnapshot])
+        let mergeResult = Merge(database: blankDatabase, journals: [blankJournal, remoteJournal], tailSnapshots: [blankSnapshot])
         let newDatabase = mergeResult.database!
         
         // Should remain empty

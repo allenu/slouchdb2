@@ -15,6 +15,9 @@
 		31E0F64120DF37FF186BEE8FD754FB2A /* JSONValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0447AC73D92F53E3D5F209D603251C6 /* JSONValue.swift */; };
 		453E841E0CF3C19550689A7998D593D3 /* JournalDiff.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FDCC965779D725E4416040BC3537603 /* JournalDiff.swift */; };
 		A7CE5C08E6FE30F4ADD3B20C977FAB0F /* Journal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 391E8EE78C37971402E5385158DFAD98 /* Journal.swift */; };
+		B79C315A22C1EC8100E535BC /* DatabaseSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79C315822C1EC6400E535BC /* DatabaseSnapshot.swift */; };
+		B79C315C22C1ECA100E535BC /* Play.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79C315B22C1ECA100E535BC /* Play.swift */; };
+		B79C315E22C1ED0200E535BC /* Merge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79C315D22C1ED0200E535BC /* Merge.swift */; };
 		B8F949673C4E4F751FCF12E2623D5ADD /* SlouchDB2-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = B49CAFE27F9AAE0BD4FE1F53A43D4164 /* SlouchDB2-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C6D2B07F669FF745286CCA9AEB034FC1 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F940C819049CFF8741C0F5E3E075E607 /* Cocoa.framework */; };
 		D259CF7124E04DD1BCD0CD1148D93327 /* DatabaseObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BEE162299EA9F622388F6BAFE3DA4DE /* DatabaseObject.swift */; };
@@ -52,29 +55,32 @@
 		4BEE162299EA9F622388F6BAFE3DA4DE /* DatabaseObject.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DatabaseObject.swift; path = SlouchDB2/Source/DatabaseObject.swift; sourceTree = "<group>"; };
 		4FDCC965779D725E4416040BC3537603 /* JournalDiff.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = JournalDiff.swift; path = SlouchDB2/Source/JournalDiff.swift; sourceTree = "<group>"; };
 		50C07E8589591477789736E024EA11B9 /* Pods-PeopleAppTests-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-PeopleAppTests-umbrella.h"; sourceTree = "<group>"; };
-		51305F71CEDF65484994788EF4B1D262 /* SlouchDB2.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = SlouchDB2.framework; path = SlouchDB2.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		51305F71CEDF65484994788EF4B1D262 /* SlouchDB2.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SlouchDB2.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		520A72B7CDB7CD59CB4FE3853AFEF280 /* Pods-PeopleApp-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-PeopleApp-umbrella.h"; sourceTree = "<group>"; };
 		5212852522FAEF06509C56A904AC33CD /* Pods-PeopleApp-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-PeopleApp-acknowledgements.plist"; sourceTree = "<group>"; };
 		5FF941FC1071A86ADD18278359C9B0E6 /* Pods-PeopleAppTests-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-PeopleAppTests-frameworks.sh"; sourceTree = "<group>"; };
-		6B75DD94E3B1D09727FB16B2352E00DB /* Pods_PeopleAppTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = Pods_PeopleAppTests.framework; path = "Pods-PeopleAppTests.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6B75DD94E3B1D09727FB16B2352E00DB /* Pods_PeopleAppTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_PeopleAppTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6CE1D3934D1C16624A523EC9EFEE3ED4 /* Pods-PeopleApp-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-PeopleApp-Info.plist"; sourceTree = "<group>"; };
 		6E6AA89877CFD938479A808A7154D900 /* Pods-PeopleApp-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-PeopleApp-frameworks.sh"; sourceTree = "<group>"; };
 		789DF7D86D9281BF938A209CC7B0CA3A /* SlouchDB2-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "SlouchDB2-Info.plist"; sourceTree = "<group>"; };
 		7EC0DFD6E8ABE6780300C738893AF807 /* Database.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Database.swift; path = SlouchDB2/Source/Database.swift; sourceTree = "<group>"; };
-		9D940727FF8FB9C785EB98E56350EF41 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		9D940727FF8FB9C785EB98E56350EF41 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		A0B2C2ED9B0C5066B1BD864805B01040 /* Pods-PeopleApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-PeopleApp.release.xcconfig"; sourceTree = "<group>"; };
 		A6EADC6E458449D44107544E5992C92C /* Pods-PeopleApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-PeopleApp.debug.xcconfig"; sourceTree = "<group>"; };
 		AE9A8AF3DAFAFEDE05C77012DEB907C5 /* Pods-PeopleAppTests-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-PeopleAppTests-Info.plist"; sourceTree = "<group>"; };
-		B0A963FD92B6065D6FC9F9D572F975CC /* SlouchDB2.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; path = SlouchDB2.podspec; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		B0A963FD92B6065D6FC9F9D572F975CC /* SlouchDB2.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; path = SlouchDB2.podspec; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		B49CAFE27F9AAE0BD4FE1F53A43D4164 /* SlouchDB2-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "SlouchDB2-umbrella.h"; sourceTree = "<group>"; };
+		B79C315822C1EC6400E535BC /* DatabaseSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DatabaseSnapshot.swift; path = SlouchDB2/Source/DatabaseSnapshot.swift; sourceTree = "<group>"; };
+		B79C315B22C1ECA100E535BC /* Play.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Play.swift; path = SlouchDB2/Source/Play.swift; sourceTree = "<group>"; };
+		B79C315D22C1ED0200E535BC /* Merge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Merge.swift; path = SlouchDB2/Source/Merge.swift; sourceTree = "<group>"; };
 		BBBC97DE1B5C5AB6FEC24E9332DE3B62 /* Pods-PeopleApp-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-PeopleApp-dummy.m"; sourceTree = "<group>"; };
-		BD346D64F09E82F9DB24773942B31B77 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; path = README.md; sourceTree = "<group>"; };
-		C006A5E25D2B3F495923E9BD0EB75762 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE; sourceTree = "<group>"; };
+		BD346D64F09E82F9DB24773942B31B77 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		C006A5E25D2B3F495923E9BD0EB75762 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		D5CBD573BE12CF65F511FD0737B1438D /* Pods-PeopleAppTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-PeopleAppTests.release.xcconfig"; sourceTree = "<group>"; };
 		D678B7F6575EFC51E8983C7F70A6932D /* SlouchDB2-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "SlouchDB2-dummy.m"; sourceTree = "<group>"; };
 		E0447AC73D92F53E3D5F209D603251C6 /* JSONValue.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = JSONValue.swift; path = SlouchDB2/Source/JSONValue.swift; sourceTree = "<group>"; };
 		E49B14E68D28545B7A23C270C1D52BB7 /* SlouchDB2-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "SlouchDB2-prefix.pch"; sourceTree = "<group>"; };
-		E522770ECCD705018622EEA496A2A24C /* Pods_PeopleApp.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = Pods_PeopleApp.framework; path = "Pods-PeopleApp.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E522770ECCD705018622EEA496A2A24C /* Pods_PeopleApp.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_PeopleApp.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F69E9B1E2E260BC040589C046F6A53CC /* Pods-PeopleAppTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-PeopleAppTests.debug.xcconfig"; sourceTree = "<group>"; };
 		F8F077084218626E42D5C4A441E0743C /* Pods-PeopleAppTests.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-PeopleAppTests.modulemap"; sourceTree = "<group>"; };
 		F940C819049CFF8741C0F5E3E075E607 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
@@ -148,9 +154,12 @@
 			children = (
 				7EC0DFD6E8ABE6780300C738893AF807 /* Database.swift */,
 				4BEE162299EA9F622388F6BAFE3DA4DE /* DatabaseObject.swift */,
+				B79C315822C1EC6400E535BC /* DatabaseSnapshot.swift */,
 				391E8EE78C37971402E5385158DFAD98 /* Journal.swift */,
 				4FDCC965779D725E4416040BC3537603 /* JournalDiff.swift */,
 				E0447AC73D92F53E3D5F209D603251C6 /* JSONValue.swift */,
+				B79C315B22C1ECA100E535BC /* Play.swift */,
+				B79C315D22C1ED0200E535BC /* Merge.swift */,
 				ECD192084F6C269C649AE98BF982EE98 /* Pod */,
 				DD9224C174A0680A5CED39CDC122756A /* Support Files */,
 			);
@@ -329,6 +338,11 @@
 			attributes = {
 				LastSwiftUpdateCheck = 1100;
 				LastUpgradeCheck = 1100;
+				TargetAttributes = {
+					38AEAFF458A3875A8087DE1176C543B1 = {
+						LastSwiftMigration = 1020;
+					};
+				};
 			};
 			buildConfigurationList = 4821239608C13582E20E6DA73FD5F1F9 /* Build configuration list for PBXProject "Pods" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -394,8 +408,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B79C315E22C1ED0200E535BC /* Merge.swift in Sources */,
 				209B520A0914B8C02B28B30ACD2A4518 /* Database.swift in Sources */,
+				B79C315A22C1EC8100E535BC /* DatabaseSnapshot.swift in Sources */,
 				D259CF7124E04DD1BCD0CD1148D93327 /* DatabaseObject.swift in Sources */,
+				B79C315C22C1ECA100E535BC /* Play.swift in Sources */,
 				A7CE5C08E6FE30F4ADD3B20C977FAB0F /* Journal.swift in Sources */,
 				453E841E0CF3C19550689A7998D593D3 /* JournalDiff.swift in Sources */,
 				31E0F64120DF37FF186BEE8FD754FB2A /* JSONValue.swift in Sources */,
@@ -491,6 +508,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
@@ -516,6 +534,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -574,8 +593,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRIP_INSTALLED_PRODUCT = NO;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 5.0;
 				SYMROOT = "${SRCROOT}/../build";
 			};
@@ -623,6 +641,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
@@ -648,6 +667,8 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};

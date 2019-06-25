@@ -1,5 +1,12 @@
 TODOs
 
+- [ ] Add basic database controller logic
+    - [ ] Convert files to in-mem representation
+    - [ ] Convert in-mem representation to files
+
+- [ ] Adding an object with existing id should be a no-op
+    - this will allow having pre-generated content to be added by multiple nodes and not have to worry about multiple copies
+
 - [ ] Add dictionary and array types to JSONValue
 
 - [ ] Handle case where we "cycle" our journal to save on pushing large files
