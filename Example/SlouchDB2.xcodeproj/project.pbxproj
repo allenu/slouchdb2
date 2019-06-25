@@ -16,7 +16,6 @@
 		B7BC075B22BF3BF700EE9A08 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B7BC075A22BF3BF700EE9A08 /* Assets.xcassets */; };
 		B7BC075E22BF3BF700EE9A08 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B7BC075C22BF3BF700EE9A08 /* Main.storyboard */; };
 		B7BC076522BF3E5300EE9A08 /* Person.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7BC076422BF3E5300EE9A08 /* Person.swift */; };
-		B7BC076722BFF9B700EE9A08 /* DatabaseController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7BC076622BFF9B700EE9A08 /* DatabaseController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,7 +44,6 @@
 		B7BC075F22BF3BF700EE9A08 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B7BC076022BF3BF700EE9A08 /* PeopleApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PeopleApp.entitlements; sourceTree = "<group>"; };
 		B7BC076422BF3E5300EE9A08 /* Person.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Person.swift; sourceTree = "<group>"; };
-		B7BC076622BFF9B700EE9A08 /* DatabaseController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseController.swift; sourceTree = "<group>"; };
 		BA5211136B32BD63D7C193EC /* Pods-PeopleAppTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PeopleAppTests.release.xcconfig"; path = "Target Support Files/Pods-PeopleAppTests/Pods-PeopleAppTests.release.xcconfig"; sourceTree = "<group>"; };
 		BE8797F69A1BFD64BFEA5EA9 /* SlouchDB2.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = SlouchDB2.podspec; path = ../SlouchDB2.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		DF1B090CBC444E73FDD23EEA /* Pods-PeopleAppTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PeopleAppTests.debug.xcconfig"; path = "Target Support Files/Pods-PeopleAppTests/Pods-PeopleAppTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -134,7 +132,6 @@
 				B7BC075F22BF3BF700EE9A08 /* Info.plist */,
 				B7BC076022BF3BF700EE9A08 /* PeopleApp.entitlements */,
 				B7BC076422BF3E5300EE9A08 /* Person.swift */,
-				B7BC076622BFF9B700EE9A08 /* DatabaseController.swift */,
 			);
 			path = PeopleApp;
 			sourceTree = "<group>";
@@ -356,7 +353,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B7BC076722BFF9B700EE9A08 /* DatabaseController.swift in Sources */,
 				B7BC075722BF3BF500EE9A08 /* ViewController.swift in Sources */,
 				B7BC075522BF3BF500EE9A08 /* AppDelegate.swift in Sources */,
 				B7BC076522BF3E5300EE9A08 /* Person.swift in Sources */,

@@ -10,7 +10,7 @@ import Cocoa
 import SlouchDB2
 
 class Document: NSDocument {
-    var databaseController: DatabaseController?
+    var session: Session
     
     // The state of the remote cache -- this will include a copy of whatever our local journal and metadata are
     var remoteJournalMetadata: [String : JournalMetadata] = [:]
@@ -18,9 +18,11 @@ class Document: NSDocument {
     var tailSnapshots: [String : DatabaseSnapshot] = [:]
 
     override init() {
-        super.init()
         // Add your subclass-specific initialization here.
-        databaseController = DatabaseController(localIdentifier: UUID().uuidString)
+        let localIdentifier = UUID().uuidString
+        session = Session(localIdentifier: localIdentifier)
+
+        super.init()
     }
 
     override class var autosavesInPlace: Bool {
@@ -35,174 +37,73 @@ class Document: NSDocument {
     }
 
     override func fileWrapper(ofType typeName: String) throws -> FileWrapper {
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        encoder.outputFormatting = .prettyPrinted
-            
-        let localSnapshotData = try! encoder.encode(databaseController!.database.snapshot)
-        let localSnapshotFileWrapper = FileWrapper(regularFileWithContents: localSnapshotData)
-        
-        let localJournalData = try! encoder.encode(databaseController!.database.localJournal)
-        let journalFileWrapper = FileWrapper(regularFileWithContents: localJournalData)
-
-        let localMetadata = try! encoder.encode(databaseController!.database.metadata)
-        let localMetadataFileWrapper = FileWrapper(regularFileWithContents: localMetadata)
-        
-        let localFolderWrapper = FileWrapper(directoryWithFileWrappers: ["local.snapshot" : localSnapshotFileWrapper,
-                                                                         "local.journal" : journalFileWrapper,
-                                                                         "local.metadata" : localMetadataFileWrapper ])
-
-        var remoteFolderFileWrappers: [String : FileWrapper] = [:]
-        remoteJournalMetadata.forEach { keyValue in
-            let identifier = keyValue.key
-            let metadata = keyValue.value
-            
-            let metadataData = try! encoder.encode(metadata)
-            remoteFolderFileWrappers["\(identifier).metadata"] = FileWrapper(regularFileWithContents: metadataData)
-        }
-        remoteJournals.forEach { keyValue in
-            let identifier = keyValue.key
-            let journal = keyValue.value
-            
-            let journalData = try! encoder.encode(journal)
-            remoteFolderFileWrappers["\(identifier).journal"] = FileWrapper(regularFileWithContents: journalData)
-        }
-
-        let remoteFolderWrapper = FileWrapper(directoryWithFileWrappers: remoteFolderFileWrappers)
-        
-        var cacheFolderFileWrappers: [String : FileWrapper] = [:]
-        tailSnapshots.forEach { keyValue in
-            let identifier = keyValue.key
-            let snapshot = keyValue.value
-            
-            let snapshotData = try! encoder.encode(snapshot)
-            cacheFolderFileWrappers["\(identifier).snapshot"] = FileWrapper(regularFileWithContents: snapshotData)
-        }
-        let cacheFolderWrapper = FileWrapper(directoryWithFileWrappers: [:])
-
-        let documentFileWrapper = FileWrapper(directoryWithFileWrappers: ["local" : localFolderWrapper,
-                                                                          "remote" : remoteFolderWrapper,
-                                                                          "cache" : cacheFolderWrapper])
-
-        return documentFileWrapper
+        return session.save()
     }
 
     override func read(from fileWrapper: FileWrapper, ofType typeName: String) throws {
-        // In this bundle folder will be the following
-        
-        // local/
-        //   - local.snapshot
-        //   - local.journal
-        //   - local.metadata
-        // remote
-        //   - uuid1.journal
-        //   - uuid1.metadata
-        //   - uuid2.journal
-        //   - uuid2.metadata
-        // cache
-        //   - uuid1.snapshot
-        //   - uuid2.snapshot
-        
-        var snapshot: DatabaseSnapshot?
-        var localJournal: Journal?
-        
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        
-        if let subFileWrappers = fileWrapper.fileWrappers {
-            if let localSubfolderWrapper = subFileWrappers.values.filter({ $0.filename! == "local" }).first {
-                localSubfolderWrapper.fileWrappers?.forEach { keyValue in
-                    let filename = keyValue.key
-                    let fileWrapper = keyValue.value
-                    
-                    switch filename {
-                    case "local.snapshot":
-                        if let localSnapshotData = fileWrapper.regularFileContents {
-                            snapshot = try? decoder.decode(DatabaseSnapshot.self, from: localSnapshotData)
-                        }
-                        
-                    case "local.journal":
-                        if let localJournalData = fileWrapper.regularFileContents {
-                            localJournal = try? decoder.decode(Journal.self, from: localJournalData)
-                        }
-
-                    default:
-                        Swift.print("Unknown file: \(filename)")
-                    }
-                }
-            }
-            if let remoteSubfolderWrapper = subFileWrappers.values.filter({ $0.filename! == "remote" }).first {
-                remoteSubfolderWrapper.fileWrappers?.forEach { keyValue in
-                    let filename = keyValue.key
-                    let fileWrapper = keyValue.value
-                    
-                    if let data = fileWrapper.regularFileContents {
-                        if filename.hasSuffix(".metadata") {
-                            if let metadata = try? decoder.decode(JournalMetadata.self, from: data) {
-                                remoteJournalMetadata[metadata.identifier] = metadata
-                            } else {
-                                assertionFailure()
-                            }
-                        } else if filename.hasSuffix(".journal") {
-                            if let remoteJournal = try? decoder.decode(Journal.self, from: data) {
-                                remoteJournals[remoteJournal.identifier] = remoteJournal
-                            } else {
-                                assertionFailure()
-                            }
-                        } else {
-                            assertionFailure()
-                        }
-                    }
-                }
-            }
-            if let cacheSubfolderWrapper = subFileWrappers.values.filter({ $0.filename! == "cache" }).first {
-                cacheSubfolderWrapper.fileWrappers?.forEach { keyValue in
-                    let filename = keyValue.key
-                    let fileWrapper = keyValue.value
-                    if let data = fileWrapper.regularFileContents {
-                        if filename.hasSuffix(".snapshot") {
-                            if let snapshot = try? decoder.decode(DatabaseSnapshot.self, from: data) {
-                                tailSnapshots[snapshot.localIdentifier] = snapshot
-                            } else {
-                                assertionFailure()
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // TODO:
-        if let snapshot = snapshot, let localJournal = localJournal {
-            databaseController = DatabaseController(localIdentifier: localJournal.identifier)
-            databaseController?.database = Database(localJournal: localJournal, snapshot: snapshot)
+        if let newSession = Session.from(fileWrapper: fileWrapper) {
+            self.session = newSession
         } else {
-            Swift.print("Couldn't load snapshot or journal")
+            assertionFailure("Couldn't load")
         }
     }
 
     func add(person: Person) {
-        databaseController?.add(person: person)
+        let properties: [String : JSONValue] = [
+            Person.namePropertyKey : .string(person.name),
+            Person.agePropertyKey : .int(person.age),
+            Person.weightPropertyKey : .int(person.weight)
+        ]
+        session.database.add(identifier: person.identifier, properties: properties)
         
         self.updateChangeCount(.changeDone)
     }
     
     var people: [Person] {
-        let people = databaseController?.people ?? []
-        return people
+        let objects = session.database.objects().values.sorted(by: { $0.creationDate < $1.creationDate })
+        
+        return objects.map { object in
+            let name: String
+            let age: Int
+            let weight: Int
+            
+            if let nameProperty = object.properties[Person.namePropertyKey],
+                case let JSONValue.string(value) = nameProperty {
+                name = value
+            } else {
+                name = "Unnamed"
+            }
+            
+            if let ageProperty = object.properties[Person.agePropertyKey],
+                case let JSONValue.int(value) = ageProperty {
+                age = value
+            } else {
+                age = 0
+            }
+            
+            if let weightProperty = object.properties[Person.weightPropertyKey],
+                case let JSONValue.int(value) = weightProperty {
+                weight = value
+            } else {
+                weight = 0
+            }
+            
+            return Person(identifier: object.identifier,
+                          name: name,
+                          weight: weight,
+                          age: age)
+        }
     }
-    
+
     func modifyPerson(identifier: String, properties: [String : JSONValue]) {
-        databaseController?.modify(identifier: identifier, properties: properties)
+        session.database.modify(identifier: identifier, properties: properties)
         
         self.updateChangeCount(.changeDone)
     }
 
     func sync(remoteFolderURL: URL) {
-        guard let databaseController = databaseController else { return }
-        
         // Update our tailSnapshot of our local database snapshot
-        tailSnapshots[databaseController.database.localJournal.identifier] = databaseController.database.snapshot
+        tailSnapshots[session.database.localJournal.identifier] = session.database.snapshot
         
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -223,14 +124,14 @@ class Document: NSDocument {
             }
         }
         
-        let localIdentifier = databaseController.database.localJournal.identifier
+        let localIdentifier = session.localIdentifier
 
         // 1. Decide if we should "push" local file to remote
         // - if fetchedRemoteJournalMetadata[localIdentifier] doesn't exist
         // - or if its diffCount is not same as ours
         let shouldPushLocalJournal: Bool
         if let fetchedLocalMetadata = fetchedRemoteJournalMetadata[localIdentifier] {
-            if fetchedLocalMetadata.diffCount != databaseController.database.localJournal.diffs.count {
+            if fetchedLocalMetadata.diffCount != session.database.localJournal.diffs.count {
                 shouldPushLocalJournal = true
             } else {
                 shouldPushLocalJournal = false
@@ -245,8 +146,8 @@ class Document: NSDocument {
             encoder.dateEncodingStrategy = .iso8601
             encoder.outputFormatting = .prettyPrinted
             
-            let metadataData = try! encoder.encode(databaseController.database.metadata)
-            let journalData = try! encoder.encode(databaseController.database.localJournal)
+            let metadataData = try! encoder.encode(session.database.metadata)
+            let journalData = try! encoder.encode(session.database.localJournal)
 
             let localMetadataFilename = "\(localIdentifier).metadata"
             let remoteLocalMetadataURL: URL = remoteFolderURL.appendingPathComponent(localMetadataFilename)
@@ -256,8 +157,8 @@ class Document: NSDocument {
             let remoteLocalJournalURL: URL = remoteFolderURL.appendingPathComponent(localJournalFilename)
             try! journalData.write(to: remoteLocalJournalURL, options: [])
 
-            remoteJournalMetadata[localIdentifier] = databaseController.database.metadata
-            remoteJournals[localIdentifier] = databaseController.database.localJournal
+            remoteJournalMetadata[localIdentifier] = session.database.metadata
+            remoteJournals[localIdentifier] = session.database.localJournal
             
             self.updateChangeCount(.changeDone)
         }
@@ -305,22 +206,18 @@ class Document: NSDocument {
         if updatedJournals.count > 0 {
             let workingTailSnapshots = Array(tailSnapshots.values)
             
-            let mergeResult = Merge(database: databaseController.database,
+            let mergeResult = Merge(database: session.database,
                                     journals: Array(remoteJournals.values),
                                     tailSnapshots: workingTailSnapshots)
             
             if let newDatabase = mergeResult.database {
-                databaseController.database = newDatabase
+                session.database = newDatabase
             }
             
             // Merge with new tail snapshots generated, taking the new one, if available
             tailSnapshots = tailSnapshots.merging(mergeResult.tailSnapshots, uniquingKeysWith: { $1 })
             
             self.updateChangeCount(.changeDone)
-        }
-        
-        DispatchQueue.global().async {
-            databaseController.sync(remoteFolderURL: remoteFolderURL)
         }
     }
 }

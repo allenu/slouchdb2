@@ -154,10 +154,4 @@ class PeopleAppTests: XCTestCase {
         // Should remain empty
         XCTAssertEqual(newDatabase.objects().count, 0)
     }
-    
-    func testSave() {
-        // Create Database
-        
-        // Call Save
-    }
 }
