@@ -275,7 +275,7 @@ public class Session {
         }
         
         // 1. Fetch metadata newer than what we have locally
-        remoteSessionStore.fetchNewMetadata(existingMetadata: remoteJournalMetadata) { [weak self] fetchMetadataResponse in
+        remoteSessionStore.fetchNewMetadata(existingMetadata: remoteJournalMetadata) { fetchMetadataResponse in
             switch fetchMetadataResponse {
             case .success(let fetchedMetadata):
                 // 2. Decide if we should "push" local file to remote
