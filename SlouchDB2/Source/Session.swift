@@ -7,6 +7,11 @@
 
 import Foundation
 
+public enum SessionSyncResult {
+    case success
+    case failure(reason: RemoteRequestFailureReason)
+}
+
 public class Session {
     public let localIdentifier: String
     public var database: Database
@@ -178,12 +183,135 @@ public class Session {
             let snapshotData = try! encoder.encode(snapshot)
             cacheFolderFileWrappers["\(identifier).snapshot"] = FileWrapper(regularFileWithContents: snapshotData)
         }
-        let cacheFolderWrapper = FileWrapper(directoryWithFileWrappers: [:])
+        let cacheFolderWrapper = FileWrapper(directoryWithFileWrappers: cacheFolderFileWrappers)
         
         let documentFileWrapper = FileWrapper(directoryWithFileWrappers: ["local" : localFolderWrapper,
                                                                           "remote" : remoteFolderWrapper,
                                                                           "cache" : cacheFolderWrapper])
         
         return documentFileWrapper
+    }
+    
+    public func sync(remoteSessionStore: RemoteSessionStore, completionHandler: @escaping (SessionSyncResult) -> Void) {
+        // Update our tailSnapshot of our local database snapshot
+        tailSnapshots[database.localJournal.identifier] = database.snapshot
+        
+        // Make a copy of the local journal in case it changes while we're syncing
+        let localJournal = database.localJournal
+        let localMetadata = database.metadata
+        let localIdentifier = self.localIdentifier
+        let remoteJournalMetadata = self.remoteJournalMetadata
+        
+        // The following code is broken up into blocks since they're asynchronous and must
+        // execute after each other. Essentially we do three things:
+        // 1. Get remote metadata that is newer than what we have
+        // 2. Push local journal and metadata if the remote doesn't have the latest
+        // 3. Fetch all remote journals newer than what we have
+        // 4. Merge everything, keeping in mind the date of oldest "new" diff
+        
+        let doFetchRemoteJournals: ([String : JournalMetadata]) -> Void = { [weak self] fetchedMetadata in
+            // 3. Fetch all those journals that changed
+            // - for each fetchedRemoteJournalMetadata entry that isn't localIdentifier,
+            //   - see if remote diffCount differ from ours
+            //   - if so, add to list
+            // - from list above, do a copy to local cache
+            
+            let journalsToFetch: [String] = fetchedMetadata.filter( { keyValue in
+                let fetchedRemoteJournalMetadata = keyValue.value
+                
+                let shouldFetchJournal: Bool
+                if fetchedRemoteJournalMetadata.identifier == localIdentifier {
+                    // Never pull a local journal
+                    shouldFetchJournal = false
+                } else if let localJournalMetadata = remoteJournalMetadata[fetchedRemoteJournalMetadata.identifier] {
+                    if localJournalMetadata.diffCount != fetchedRemoteJournalMetadata.diffCount {
+                        shouldFetchJournal = true
+                    } else {
+                        shouldFetchJournal = false
+                    }
+                } else {
+                    shouldFetchJournal = true
+                }
+
+                return shouldFetchJournal
+            }).map { $0.key }
+            
+            if journalsToFetch.count > 0 {
+                remoteSessionStore.fetchJournals(identifiers: journalsToFetch) { [weak self] response in
+                    guard let strongSelf = self else { return }
+                    
+                    switch response {
+                    case .success(let journals):
+                        
+                        journals.forEach { journal in
+                            strongSelf.remoteJournalMetadata[journal.identifier] = fetchedMetadata[journal.identifier]
+                            strongSelf.remoteJournals[journal.identifier] = journal
+                        }
+                        
+                        // 4. Finally, do a merge
+                        let workingTailSnapshots = Array(strongSelf.tailSnapshots.values)
+                        
+                        let mergeResult = Merge(database: strongSelf.database,
+                                                journals: Array(strongSelf.remoteJournals.values),
+                                                tailSnapshots: workingTailSnapshots)
+                        
+                        if let newDatabase = mergeResult.database {
+                            strongSelf.database = newDatabase
+                        }
+                        
+                        // Merge with new tail snapshots generated, taking the new one, if available
+                        strongSelf.tailSnapshots = strongSelf.tailSnapshots.merging(mergeResult.tailSnapshots, uniquingKeysWith: { $1 })
+                        
+                        completionHandler(.success)
+                        
+                    case .failure(let reason):
+                        completionHandler(.failure(reason: reason))
+                    }
+                }
+            } else {
+                // No journals to sync!
+                completionHandler(.success)
+            }
+        }
+        
+        // 1. Fetch metadata newer than what we have locally
+        remoteSessionStore.fetchNewMetadata(existingMetadata: remoteJournalMetadata) { [weak self] fetchMetadataResponse in
+            switch fetchMetadataResponse {
+            case .success(let fetchedMetadata):
+                // 2. Decide if we should "push" local file to remote
+                // - if fetchedMetadata[localIdentifier] doesn't exist
+                // - or if its diffCount is not same as ours (ours is newer)
+                let shouldPushLocalJournal: Bool
+                if let fetchedLocalMetadata = fetchedMetadata[localIdentifier] {
+                    if fetchedLocalMetadata.diffCount != localJournal.diffs.count {
+                        shouldPushLocalJournal = true
+                    } else {
+                        shouldPushLocalJournal = false
+                    }
+                } else {
+                    // No remote copy, so do push
+                    shouldPushLocalJournal = true
+                }
+                
+                if shouldPushLocalJournal {
+                    remoteSessionStore.push(localJournal: localJournal,
+                                            localMetadata: localMetadata) { pushResponse in
+                        switch pushResponse {
+                        case .success:
+                            // Push succeeded.
+                            doFetchRemoteJournals(fetchedMetadata)
+                            
+                        case .failure(let reason):
+                            completionHandler(.failure(reason: reason))
+                        }
+                    }
+                } else {
+                    doFetchRemoteJournals(fetchedMetadata)
+                }
+
+            case .failure(let reason):
+                completionHandler(.failure(reason: reason))
+            }
+        }
     }
 }

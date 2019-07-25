@@ -62,7 +62,8 @@ class ViewController: NSViewController {
         guard let document = document else { return }
         
         if let remoteFolder = remoteFolder {
-            document.sync(remoteFolderURL: remoteFolder)
+//            document.sync(remoteFolderURL: remoteFolder)
+            document.syncNew(remoteFolderUrl: remoteFolder)
             
             // TODO: use Document to tell us when we should sync...
             tableView.reloadData()

@@ -13,9 +13,6 @@ class Document: NSDocument {
     var session: Session
     
     // The state of the remote cache -- this will include a copy of whatever our local journal and metadata are
-    var remoteJournalMetadata: [String : JournalMetadata] = [:]
-    var remoteJournals: [String : Journal] = [:]
-    var tailSnapshots: [String : DatabaseSnapshot] = [:]
 
     override init() {
         // Add your subclass-specific initialization here.
@@ -100,124 +97,18 @@ class Document: NSDocument {
         
         self.updateChangeCount(.changeDone)
     }
-
-    func sync(remoteFolderURL: URL) {
-        // Update our tailSnapshot of our local database snapshot
-        tailSnapshots[session.database.localJournal.identifier] = session.database.snapshot
-        
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        
-        var fetchedRemoteJournalMetadata: [String : JournalMetadata] = [:]
-        
-        let fileEnumerator = FileManager.default.enumerator(at: remoteFolderURL, includingPropertiesForKeys: nil)
-        while let element = fileEnumerator?.nextObject() {
-            if let fileURL = element as? URL {
-                if fileURL.isFileURL && fileURL.lastPathComponent.hasSuffix(".metadata" ) {
-                    //
-                    Swift.print(fileURL.lastPathComponent)
-                    
-                    let data = try! Data(contentsOf: fileURL)
-                    let metadata = try! decoder.decode(JournalMetadata.self, from: data)
-                    fetchedRemoteJournalMetadata[metadata.identifier] = metadata
-                }
+    
+    func syncNew(remoteFolderUrl: URL) {
+        let remoteSessionStore = FileBasedRemoteSessionStore(remoteFolderUrl: remoteFolderUrl)
+        session.sync(remoteSessionStore: remoteSessionStore, completionHandler: { response in
+            switch response {
+            case .success:
+                Swift.print("Sync successful")
+                self.updateChangeCount(.changeDone)
+                
+            case .failure(let reason):
+                Swift.print("Sync failed: \(reason)")
             }
-        }
-        
-        let localIdentifier = session.localIdentifier
-
-        // 1. Decide if we should "push" local file to remote
-        // - if fetchedRemoteJournalMetadata[localIdentifier] doesn't exist
-        // - or if its diffCount is not same as ours
-        let shouldPushLocalJournal: Bool
-        if let fetchedLocalMetadata = fetchedRemoteJournalMetadata[localIdentifier] {
-            if fetchedLocalMetadata.diffCount != session.database.localJournal.diffs.count {
-                shouldPushLocalJournal = true
-            } else {
-                shouldPushLocalJournal = false
-            }
-        } else {
-            // No remote copy, so do push
-            shouldPushLocalJournal = true
-        }
-        
-        if shouldPushLocalJournal {
-            let encoder = JSONEncoder()
-            encoder.dateEncodingStrategy = .iso8601
-            encoder.outputFormatting = .prettyPrinted
-            
-            let metadataData = try! encoder.encode(session.database.metadata)
-            let journalData = try! encoder.encode(session.database.localJournal)
-
-            let localMetadataFilename = "\(localIdentifier).metadata"
-            let remoteLocalMetadataURL: URL = remoteFolderURL.appendingPathComponent(localMetadataFilename)
-            try! metadataData.write(to: remoteLocalMetadataURL, options: [])
-
-            let localJournalFilename = "\(localIdentifier).journal"
-            let remoteLocalJournalURL: URL = remoteFolderURL.appendingPathComponent(localJournalFilename)
-            try! journalData.write(to: remoteLocalJournalURL, options: [])
-
-            remoteJournalMetadata[localIdentifier] = session.database.metadata
-            remoteJournals[localIdentifier] = session.database.localJournal
-            
-            self.updateChangeCount(.changeDone)
-        }
-        
-        // 2. Fetch all those journals that changed
-        // - for each fetchedRemoteJournalMetadata entry that isn't localIdentifier,
-        //   - see if remote diffCount differ from ours
-        //   - if so, add to list
-        // - from list above, do a copy to local cache
-        var updatedJournals: [Journal] = []
-        fetchedRemoteJournalMetadata.forEach { keyValue in
-            let fetchedRemoteJournalMetadata = keyValue.value
-            
-            let shouldPullJournal: Bool
-            if fetchedRemoteJournalMetadata.identifier == localIdentifier {
-                // Never pull a local journal
-                shouldPullJournal = false
-            } else if let localJournalMetadata = remoteJournalMetadata[fetchedRemoteJournalMetadata.identifier] {
-                if localJournalMetadata.diffCount != fetchedRemoteJournalMetadata.diffCount {
-                    shouldPullJournal = true
-                } else {
-                    shouldPullJournal = false
-                }
-            } else {
-                shouldPullJournal = true
-            }
-            
-            if shouldPullJournal {
-                // First try to get that file...
-                let fetchedRemoteJournalURL = remoteFolderURL.appendingPathComponent("\(fetchedRemoteJournalMetadata.identifier).journal")
-                if let fetchedRemoteJournalData = try? Data(contentsOf: fetchedRemoteJournalURL) {
-                    let fetchedRemoteJournal = try! decoder.decode(Journal.self, from: fetchedRemoteJournalData)
-                    
-                    remoteJournalMetadata[fetchedRemoteJournalMetadata.identifier] = fetchedRemoteJournalMetadata
-                    remoteJournals[fetchedRemoteJournalMetadata.identifier] = fetchedRemoteJournal
-                    
-                    self.updateChangeCount(.changeDone)
-                    
-                    updatedJournals.append(fetchedRemoteJournal)
-                }
-            }
-        }
-        
-        // 3. Do sync
-        if updatedJournals.count > 0 {
-            let workingTailSnapshots = Array(tailSnapshots.values)
-            
-            let mergeResult = Merge(database: session.database,
-                                    journals: Array(remoteJournals.values),
-                                    tailSnapshots: workingTailSnapshots)
-            
-            if let newDatabase = mergeResult.database {
-                session.database = newDatabase
-            }
-            
-            // Merge with new tail snapshots generated, taking the new one, if available
-            tailSnapshots = tailSnapshots.merging(mergeResult.tailSnapshots, uniquingKeysWith: { $1 })
-            
-            self.updateChangeCount(.changeDone)
-        }
+        })
     }
 }

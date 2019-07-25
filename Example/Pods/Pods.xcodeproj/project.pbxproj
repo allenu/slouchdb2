@@ -19,6 +19,7 @@
 		B79C315C22C1ECA100E535BC /* Play.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79C315B22C1ECA100E535BC /* Play.swift */; };
 		B79C315E22C1ED0200E535BC /* Merge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79C315D22C1ED0200E535BC /* Merge.swift */; };
 		B79C316022C1EE0F00E535BC /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79C315F22C1EE0F00E535BC /* Session.swift */; };
+		B7B695CF22E9748E006E2DC1 /* RemoteSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7B695CD22E97215006E2DC1 /* RemoteSessionStore.swift */; };
 		B8F949673C4E4F751FCF12E2623D5ADD /* SlouchDB2-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = B49CAFE27F9AAE0BD4FE1F53A43D4164 /* SlouchDB2-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C6D2B07F669FF745286CCA9AEB034FC1 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F940C819049CFF8741C0F5E3E075E607 /* Cocoa.framework */; };
 		D259CF7124E04DD1BCD0CD1148D93327 /* DatabaseObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BEE162299EA9F622388F6BAFE3DA4DE /* DatabaseObject.swift */; };
@@ -75,6 +76,7 @@
 		B79C315B22C1ECA100E535BC /* Play.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Play.swift; path = SlouchDB2/Source/Play.swift; sourceTree = "<group>"; };
 		B79C315D22C1ED0200E535BC /* Merge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Merge.swift; path = SlouchDB2/Source/Merge.swift; sourceTree = "<group>"; };
 		B79C315F22C1EE0F00E535BC /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Session.swift; path = SlouchDB2/Source/Session.swift; sourceTree = "<group>"; };
+		B7B695CD22E97215006E2DC1 /* RemoteSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RemoteSessionStore.swift; path = SlouchDB2/Source/RemoteSessionStore.swift; sourceTree = "<group>"; };
 		BBBC97DE1B5C5AB6FEC24E9332DE3B62 /* Pods-PeopleApp-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-PeopleApp-dummy.m"; sourceTree = "<group>"; };
 		BD346D64F09E82F9DB24773942B31B77 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		C006A5E25D2B3F495923E9BD0EB75762 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
@@ -165,6 +167,7 @@
 				ECD192084F6C269C649AE98BF982EE98 /* Pod */,
 				DD9224C174A0680A5CED39CDC122756A /* Support Files */,
 				B79C315F22C1EE0F00E535BC /* Session.swift */,
+				B7B695CD22E97215006E2DC1 /* RemoteSessionStore.swift */,
 			);
 			name = SlouchDB2;
 			path = ../..;
@@ -412,6 +415,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B79C316022C1EE0F00E535BC /* Session.swift in Sources */,
+				B7B695CF22E9748E006E2DC1 /* RemoteSessionStore.swift in Sources */,
 				B79C315E22C1ED0200E535BC /* Merge.swift in Sources */,
 				209B520A0914B8C02B28B30ACD2A4518 /* Database.swift in Sources */,
 				B79C315A22C1EC8100E535BC /* DatabaseSnapshot.swift in Sources */,

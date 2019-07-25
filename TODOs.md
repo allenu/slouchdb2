@@ -1,8 +1,23 @@
 TODOs
 
+- [x] Move merging into Session
+    - [x] Delete remoteJournalMetadata, remoteJournals, and tailSnapshots from Document and use Session's instead
+    - [x] Should have a RemoteSlouchDBSource protocol
+        - func fetchRemoteMetadata(completionHandler: @escaping (FetchMetadataResponse))
+            - return a list of metadata files
+        - func pushLocal(metadata:, journal:, completionHandler: )
+        - func fetchRemoteJournals(journalIdentifiers:, completionHandler: @escaping (FetchRemoteJournalsResponse))
+    - [x] Be sure to save "cache" folder
+    - [x] Be sure to save "remote" folder
+
+    - as a policy, always do save() on a Session before starting sync
+
 - [ ] Add basic database controller logic
     - [ ] Convert files to in-mem representation
     - [ ] Convert in-mem representation to files
+
+- [ ] Should "modify" mean "if entry doesn't exist, create it"? We could still have "add" commands, but we can loosen
+      what "modify" means so it means update if already there and add if not already there...
 
 - [ ] Adding an object with existing id should be a no-op
     - this will allow having pre-generated content to be added by multiple nodes and not have to worry about multiple copies
