@@ -51,13 +51,13 @@ class Document: NSDocument {
             Person.agePropertyKey : .int(person.age),
             Person.weightPropertyKey : .int(person.weight)
         ]
-        session.database.add(identifier: person.identifier, properties: properties)
+        session.database.add(identifier: person.identifier, type: "person", properties: properties)
         
         self.updateChangeCount(.changeDone)
     }
     
     var people: [Person] {
-        let objects = session.database.objects().values.sorted(by: { $0.creationDate < $1.creationDate })
+        let objects = session.database.objects(type: "person").values.sorted(by: { $0.creationDate < $1.creationDate })
         
         return objects.map { object in
             let name: String

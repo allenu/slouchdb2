@@ -14,13 +14,16 @@ public struct DatabaseObject: Codable, Equatable {
     }
     
     public let identifier: String
+    public let type: String
     public let creationDate: Date
     public let properties: [String : JSONValue]
     
     public init(identifier: String,
+                type: String,
                 creationDate: Date,
                 properties: [String : JSONValue]) {
         self.identifier = identifier
+        self.type = type
         self.creationDate = creationDate
         self.properties = properties
     }

@@ -66,12 +66,13 @@ public class Database {
         snapshot.journalSnapshots[localJournal.identifier] = newJournalSnapshot
     }
     
-    public func add(identifier: String, properties: [String : JSONValue]) {
+    public func add(identifier: String, type: String, properties: [String : JSONValue]) {
         let now = Date()
-        let object = DatabaseObject(identifier: identifier, creationDate: now, properties: properties)
+        let object = DatabaseObject(identifier: identifier, type: type, creationDate: now, properties: properties)
         snapshot.objects[identifier] = object
         
         let diff = JournalDiff(diffType: .add,
+                               type: type,
                                identifier: identifier,
                                timestamp: now, properties: properties)
         add(localDiff: diff)
@@ -81,7 +82,7 @@ public class Database {
         snapshot.objects.removeValue(forKey: identifier)
         
         let now = Date()
-        let diff = JournalDiff(diffType: .remove, identifier: identifier, timestamp: now, properties: [:])
+        let diff = JournalDiff(diffType: .remove, type: nil, identifier: identifier, timestamp: now, properties: [:])
         add(localDiff: diff)
     }
     
@@ -89,20 +90,25 @@ public class Database {
         let mergedProperties: [String : JSONValue]
         if let oldObject = snapshot.objects[identifier] {
             mergedProperties = oldObject.properties.merging(properties, uniquingKeysWith: { $1 })
-            snapshot.objects[identifier] = DatabaseObject(identifier: identifier, creationDate: oldObject.creationDate, properties: mergedProperties)
-            
-        } else {
-            // Object doesn't exist to modify
+            snapshot.objects[identifier] = DatabaseObject(identifier: identifier,
+                                                          type: oldObject.type,
+                                                          creationDate: oldObject.creationDate,
+                                                          properties: mergedProperties)
         }
 
         // Even if object doesn't exist, still create diff for it, in the off chance we just had a bad local journal
         let now = Date()
-        let diff = JournalDiff(diffType: .update, identifier: identifier, timestamp: now, properties: properties)
+        let diff = JournalDiff(diffType: .update,
+                               type: nil,
+                               identifier: identifier,
+                               timestamp: now,
+                               properties: properties)
         add(localDiff: diff)
     }
     
-    public func objects() -> [String : DatabaseObject] {
-        return snapshot.objects
+    public func objects(type: String) -> [String : DatabaseObject] {
+        // TODO: Have an in-mem grouping of object by type for easy look-up.
+        return snapshot.objects.filter({ $0.value.type == type })
     }
     
     func save(directory: URL, prefix: String = "") {

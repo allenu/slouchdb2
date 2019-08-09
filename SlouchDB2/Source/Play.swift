@@ -76,6 +76,7 @@ public func Play(journals: [Journal],
             case .add:
                 if snapshotObjects[currentPickedDiff.identifier] == nil {
                     snapshotObjects[currentPickedDiff.identifier] = DatabaseObject(identifier: currentPickedDiff.identifier,
+                                                                                   type: currentPickedDiff.type ?? "",
                                                                                    creationDate: currentPickedDiff.timestamp,
                                                                                    properties: currentPickedDiff.properties)
                 } else {
@@ -90,6 +91,7 @@ public func Play(journals: [Journal],
                     let newObjectProperties = oldObject.properties.merging(currentPickedDiff.properties,
                                                                            uniquingKeysWith: { $1 })
                     snapshotObjects[currentPickedDiff.identifier] = DatabaseObject(identifier: currentPickedDiff.identifier,
+                                                                                   type: currentPickedDiff.type ?? "",
                                                                                    creationDate: oldObject.creationDate,
                                                                                    properties: newObjectProperties)
                 } else {

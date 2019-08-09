@@ -1,5 +1,16 @@
 TODOs
 
+- [x] Add support for housing multiple types in a single database
+    - [x] Add should specify type
+    - [x] Diff should supply optional type
+    - [x] objects() should take type property
+
+- [ ] Improve object reading
+    - [ ] in a Snapshot, group objects by type for easy fetching of all objects of a type (no filtering required)
+          - make it so that Database.object(type:) uses an in-mem grouping of objects by type
+
+- [ ] Add object deletion
+
 - [x] Move merging into Session
     - [x] Delete remoteJournalMetadata, remoteJournals, and tailSnapshots from Document and use Session's instead
     - [x] Should have a RemoteSlouchDBSource protocol
@@ -12,9 +23,9 @@ TODOs
 
     - as a policy, always do save() on a Session before starting sync
 
-- [ ] Add basic database controller logic
-    - [ ] Convert files to in-mem representation
-    - [ ] Convert in-mem representation to files
+- [x] Add basic database controller logic
+    - [x] Convert files to in-mem representation
+    - [x] Convert in-mem representation to files
 
 - [ ] Should "modify" mean "if entry doesn't exist, create it"? We could still have "add" commands, but we can loosen
       what "modify" means so it means update if already there and add if not already there...
