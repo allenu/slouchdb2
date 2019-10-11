@@ -10,6 +10,7 @@ TODOs
           - make it so that Database.object(type:) uses an in-mem grouping of objects by type
 
 - [ ] Add object deletion
+    - [ ] Add diff command to un-delete an entry
 
 - [x] Move merging into Session
     - [x] Delete remoteJournalMetadata, remoteJournals, and tailSnapshots from Document and use Session's instead

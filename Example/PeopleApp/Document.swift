@@ -56,6 +56,10 @@ class Document: NSDocument {
         self.updateChangeCount(.changeDone)
     }
     
+    func remove(person: Person) {
+        session.database.remove(identifier: person.identifier)
+    }
+    
     var people: [Person] {
         let objects = session.database.objects(type: "person").values.sorted(by: { $0.creationDate < $1.creationDate })
         

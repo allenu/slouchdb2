@@ -244,10 +244,19 @@ public class Session {
                     case .success(let journals):
                         
                         journals.forEach { journal in
-                            strongSelf.remoteJournalMetadata[journal.identifier] = fetchedMetadata[journal.identifier]
-                            strongSelf.remoteJournals[journal.identifier] = journal
+                            // Only use the journal if the contents match the metadata. There's the possibility
+                            // that during a sync, a client is only able to upload the journal or just the metadata,
+                            // meaning that what is found remotely is invalid and needs updating.
+                            if let metadata = fetchedMetadata[journal.identifier] {
+                                let journalAndMetadataMatch = metadata.diffCount == journal.diffs.count && metadata.identifier == journal.identifier
+                                
+                                if journalAndMetadataMatch {
+                                    strongSelf.remoteJournalMetadata[journal.identifier] = fetchedMetadata[journal.identifier]
+                                    strongSelf.remoteJournals[journal.identifier] = journal
+                                }
+                            }
                         }
-                        
+
                         // 4. Finally, do a merge
                         let workingTailSnapshots = Array(strongSelf.tailSnapshots.values)
                         
