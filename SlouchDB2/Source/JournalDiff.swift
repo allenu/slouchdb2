@@ -15,12 +15,12 @@ public enum DiffType: String, Codable {
 }
 
 public struct JournalDiff: Codable {
-    let diffType: DiffType
-    let type: String?
-    let identifier: String
-    let timestamp: Date
+    public let diffType: DiffType
+    public let type: String?
+    public let identifier: String
+    public let timestamp: Date
     
-    let properties: [String : JSONValue]
+    public let properties: [String : JSONValue]
     
     public init(diffType: DiffType, type: String?, identifier: String, timestamp: Date, properties: [String : JSONValue]) {
         self.diffType = diffType

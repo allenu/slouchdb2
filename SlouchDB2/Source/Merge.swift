@@ -33,6 +33,8 @@ public func Merge(database: Database,
             // Filter out any empty journals. Don't care.
             return false
         } else if let localJournalSnapshot = database.snapshot.journalSnapshots[journal.identifier] {
+            // TODO: - remove assert? Seems like this could happen in cases where we failed to upload?
+            
             assert(localJournalSnapshot.metadata.diffCount <= journal.diffs.count, "Our local journal snapshot of this journal is longer than remote one!")
             return localJournalSnapshot.metadata.diffCount < journal.diffs.count
         } else {

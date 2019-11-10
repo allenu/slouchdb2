@@ -88,18 +88,23 @@ public class Database {
     
     public func modify(identifier: String, properties: [String : JSONValue]) {
         let mergedProperties: [String : JSONValue]
+        let objectType: String
         if let oldObject = snapshot.objects[identifier] {
             mergedProperties = oldObject.properties.merging(properties, uniquingKeysWith: { $1 })
+            objectType = oldObject.type
             snapshot.objects[identifier] = DatabaseObject(identifier: identifier,
                                                           type: oldObject.type,
                                                           creationDate: oldObject.creationDate,
                                                           properties: mergedProperties)
+        } else {
+            objectType = "unknown"
+            assertionFailure("Error: modifying update that doesn't exist")
         }
 
         // Even if object doesn't exist, still create diff for it, in the off chance we just had a bad local journal
         let now = Date()
         let diff = JournalDiff(diffType: .update,
-                               type: nil,
+                               type: objectType,
                                identifier: identifier,
                                timestamp: now,
                                properties: properties)

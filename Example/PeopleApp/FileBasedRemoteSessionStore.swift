@@ -20,56 +20,71 @@ class FileBasedRemoteSessionStore: RemoteSessionStore {
         decoder.dateDecodingStrategy = .iso8601
     }
     
-    func fetchNewMetadata(existingMetadata: [String : JournalMetadata], completionHandler: @escaping (FetchNewMetadataResponse) -> Void) {
-        
-        var newMetadata: [String : JournalMetadata] = [:]
-        
-        let fileEnumerator = FileManager.default.enumerator(at: remoteFolderUrl, includingPropertiesForKeys: nil)
-        while let element = fileEnumerator?.nextObject() {
-            if let fileURL = element as? URL {
-                if fileURL.isFileURL && fileURL.lastPathComponent.hasSuffix(".metadata" ) {
-                    let data = try! Data(contentsOf: fileURL)
-                    let metadata: JournalMetadata = try! decoder.decode(JournalMetadata.self, from: data)
-                    
-                    if let localCopyOfRemoteMetadata = existingMetadata[metadata.identifier] {
-                        if localCopyOfRemoteMetadata.diffCount != metadata.diffCount {
-                            newMetadata[metadata.identifier] = metadata
-                        }
-                    } else {
-                        newMetadata[metadata.identifier] = metadata
-                    }
-                }
-            }
-        }
-        
-        let response = FetchNewMetadataResponse.success(metadata: newMetadata)
-        completionHandler(response)
-    }
-    
-    func push(localJournal: Journal, localMetadata: JournalMetadata, completionHandler: @escaping (PushLocalResponse) -> Void) {
+    func push(localJournal: Journal, completionHandler: @escaping (PushLocalResponse) -> Void) {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = .prettyPrinted
         
-        let metadataData = try! encoder.encode(localMetadata)
         let journalData = try! encoder.encode(localJournal)
         
         let localIdentifier = localJournal.identifier
-        
-        let localMetadataFilename = "\(localIdentifier).metadata"
-        let remoteLocalMetadataURL: URL = remoteFolderUrl.appendingPathComponent(localMetadataFilename)
-        try! metadataData.write(to: remoteLocalMetadataURL, options: [])
         
         let localJournalFilename = "\(localIdentifier).journal"
         let remoteLocalJournalURL: URL = remoteFolderUrl.appendingPathComponent(localJournalFilename)
         try! journalData.write(to: remoteLocalJournalURL, options: [])
         
-        completionHandler(.success)
+        // Get remote file version
+        var newVersion: String = ""
+        if let fileAttributes = try? FileManager.default.attributesOfItem(atPath: remoteLocalJournalURL.path) as [FileAttributeKey : Any] {
+            if let lastModifiedDate = fileAttributes[FileAttributeKey.modificationDate] as? Date {
+                print("lastModifiedDate: \(lastModifiedDate)")
+                let dateFormatter = ISO8601DateFormatter()
+                newVersion = dateFormatter.string(from: lastModifiedDate)
+            } else {
+                assertionFailure()
+            }
+        } else {
+            assertionFailure()
+        }
+
+        completionHandler(.success(version: newVersion))
+    }
+    
+    func fetchRemoteJournalVersions(completionHandler: @escaping (FetchRemoteJournalVersionsResponse) -> Void) {
+        // Enumerate folder and get file version
+        
+        var newVendorVersion: [String : String] = [:]
+        
+        let fileEnumerator = FileManager.default.enumerator(at: remoteFolderUrl, includingPropertiesForKeys: nil)
+        while let element = fileEnumerator?.nextObject() {
+            if let fileURL = element as? URL {
+                if fileURL.isFileURL && fileURL.lastPathComponent.hasSuffix(".journal" ) {
+                    let journalIdentifier = fileURL.lastPathComponent.replacingOccurrences(of: ".journal", with: "")
+
+                    if let fileAttributes = try? FileManager.default.attributesOfItem(atPath: fileURL.path) as [FileAttributeKey : Any] {
+                        if let lastModifiedDate = fileAttributes[FileAttributeKey.modificationDate] as? Date {
+                            print("lastModifiedDate: \(lastModifiedDate)")
+                            let dateFormatter = ISO8601DateFormatter()
+                            let version = dateFormatter.string(from: lastModifiedDate)
+                            
+                            newVendorVersion[journalIdentifier] = version
+                        } else {
+                            assertionFailure()
+                        }
+                    } else {
+                        assertionFailure()
+                    }
+                }
+            }
+        }
+        
+        let response = FetchRemoteJournalVersionsResponse.success(versions: newVendorVersion)
+        completionHandler(response)
     }
     
     func fetchJournals(identifiers: [String], completionHandler: @escaping (FetchJournalsResponse) -> Void) {
         
-        var fetchedJournals: [Journal] = []
+        var fetchedJournalsAndVersions: [FetchedJournalAndVersion] = []
         var succeeded = true
         
         identifiers.forEach { identifier in
@@ -79,7 +94,26 @@ class FileBasedRemoteSessionStore: RemoteSessionStore {
             if let fetchedRemoteJournalData = try? Data(contentsOf: fetchedRemoteJournalURL) {
                 let fetchedRemoteJournal = try! decoder.decode(Journal.self, from: fetchedRemoteJournalData)
                 
-                fetchedJournals.append(fetchedRemoteJournal)
+                
+                // TODO: Use date of file here as version
+                let version: String
+                if let fileAttributes = try? FileManager.default.attributesOfItem(atPath: fetchedRemoteJournalURL.path) as [FileAttributeKey : Any] {
+                    if let lastModifiedDate = fileAttributes[FileAttributeKey.modificationDate] as? Date {
+                        print("lastModifiedDate: \(lastModifiedDate)")
+                        let dateFormatter = ISO8601DateFormatter()
+                        version = dateFormatter.string(from: lastModifiedDate)
+                    } else {
+                        print("Could not load lastModifiedDate")
+                        version = "not-found"
+                    }
+                } else {
+                    version = "not-found"
+                }
+                
+                let fetchedJournalAndVersion = FetchedJournalAndVersion(journal: fetchedRemoteJournal,
+                                                                        version: version)
+                
+                fetchedJournalsAndVersions.append(fetchedJournalAndVersion)
             } else {
                 // Failed. Inconsistency in files. Should we fail or just assume it was deleted and act
                 // like nothing happened?
@@ -88,7 +122,7 @@ class FileBasedRemoteSessionStore: RemoteSessionStore {
         }
 
         if succeeded {
-            completionHandler(.success(journals: fetchedJournals))
+            completionHandler(.success(journalsAndVersions: fetchedJournalsAndVersions))
         } else {
             completionHandler(.failure(reason: .serverError))
         }

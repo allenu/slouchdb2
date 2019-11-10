@@ -14,26 +14,34 @@ public enum RemoteRequestFailureReason {
     case timeout
 }
 
-public enum FetchNewMetadataResponse {
-    case success(metadata: [String : JournalMetadata])
+public enum PushLocalResponse {
+    case success(version: String)
     case failure(reason: RemoteRequestFailureReason)
 }
 
-public enum PushLocalResponse {
-    case success
-    case failure(reason: RemoteRequestFailureReason)
+public struct FetchedJournalAndVersion {
+    public let journal: Journal
+    public let version: String
+    public init(journal: Journal, version: String) {
+        self.journal = journal
+        self.version = version
+    }
 }
 
 public enum FetchJournalsResponse {
-    case success(journals: [Journal])
+    case success(journalsAndVersions: [FetchedJournalAndVersion])
+    case failure(reason: RemoteRequestFailureReason)
+}
+
+public enum FetchRemoteJournalVersionsResponse {
+    case success(versions: [String : String])
     case failure(reason: RemoteRequestFailureReason)
 }
 
 public protocol RemoteSessionStore: class {
-    // Get metadata that is newer than what we have already
-    func fetchNewMetadata(existingMetadata: [String : JournalMetadata], completionHandler: @escaping (FetchNewMetadataResponse) -> Void)
-    
-    func push(localJournal: Journal, localMetadata: JournalMetadata, completionHandler: @escaping (PushLocalResponse) -> Void)
+    func fetchRemoteJournalVersions(completionHandler: @escaping (FetchRemoteJournalVersionsResponse) -> Void)
+
+    func push(localJournal: Journal, completionHandler: @escaping (PushLocalResponse) -> Void)
     
     func fetchJournals(identifiers: [String], completionHandler: @escaping (FetchJournalsResponse) -> Void)
 }

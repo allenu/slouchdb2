@@ -16,10 +16,11 @@ public class Session {
     public let localIdentifier: String
     public var database: Database
     
-    // The state of the remote cache -- this will include a copy of whatever our local journal and metadata are
-    public var remoteJournalMetadata: [String : JournalMetadata] = [:]
+    // The state of the remote cache -- this will include a copy of whatever our local journal
+    public var remoteJournalVersion: [String : String] = [:]
     public var remoteJournals: [String : Journal] = [:]
     public var tailSnapshots: [String : DatabaseSnapshot] = [:]
+    public var lastLocalJournalChangePushed: String = "no-data" // Cannot store empty string to Data
     
     public init(localIdentifier: String) {
         self.localIdentifier = localIdentifier
@@ -33,12 +34,14 @@ public class Session {
     public init(localIdentifier: String,
                 snapshot: DatabaseSnapshot,
                 localJournal: Journal,
-                remoteJournalMetadata: [String : JournalMetadata],
+                remoteJournalVersion: [String : String],
+                lastLocalJournalChangePushed: String,
                 remoteJournals: [String : Journal],
                 tailSnapshots: [String : DatabaseSnapshot]) {
         self.localIdentifier = localIdentifier
         self.database = Database(localJournal: localJournal, snapshot: snapshot)
-        self.remoteJournalMetadata = remoteJournalMetadata
+        self.remoteJournalVersion = remoteJournalVersion
+        self.lastLocalJournalChangePushed = lastLocalJournalChangePushed
         self.remoteJournals = remoteJournals
         self.tailSnapshots = tailSnapshots
     }
@@ -50,20 +53,18 @@ public class Session {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
     
-        var remoteJournalMetadata: [String : JournalMetadata] = [:]
+        var remoteJournalVersion: [String : String] = [:]
         var remoteJournals: [String : Journal] = [:]
+        var lastLocalJournalChangePushed: String = "no-data"
         var tailSnapshots: [String : DatabaseSnapshot] = [:]
-    
+        
         // In this bundle folder will be the following
         // local/
         //   - local.snapshot
         //   - local.journal
-        //   - local.metadata
         // remote
         //   - uuid1.journal
-        //   - uuid1.metadata
         //   - uuid2.journal
-        //   - uuid2.metadata
         // cache
         //   - uuid1.snapshot
         //   - uuid2.snapshot
@@ -95,15 +96,21 @@ public class Session {
                     let fileWrapper = keyValue.value
     
                     if let data = fileWrapper.regularFileContents {
-                        if filename.hasSuffix(".metadata") {
-                            if let metadata = try? decoder.decode(JournalMetadata.self, from: data) {
-                                remoteJournalMetadata[metadata.identifier] = metadata
+                        if filename.hasSuffix(".journal") {
+                            if let remoteJournal = try? decoder.decode(Journal.self, from: data) {
+                                remoteJournals[remoteJournal.identifier] = remoteJournal
                             } else {
                                 assertionFailure()
                             }
-                        } else if filename.hasSuffix(".journal") {
-                            if let remoteJournal = try? decoder.decode(Journal.self, from: data) {
-                                remoteJournals[remoteJournal.identifier] = remoteJournal
+                        } else if filename == "info.last-push" {
+                            if let decodedLastLocalJournalChangePushed: String = try? String(data: data, encoding: .utf8) {
+                                lastLocalJournalChangePushed = decodedLastLocalJournalChangePushed
+                            } else {
+                                assertionFailure()
+                            }
+                        } else if filename == "info.remote-version" {
+                            if let decodedRemoteJournalVersion = try? decoder.decode([String : String].self, from: data) {
+                                remoteJournalVersion = decodedRemoteJournalVersion
                             } else {
                                 assertionFailure()
                             }
@@ -134,7 +141,8 @@ public class Session {
             return Session(localIdentifier: localJournal.identifier,
                            snapshot: snapshot,
                            localJournal: localJournal,
-                           remoteJournalMetadata: remoteJournalMetadata,
+                           remoteJournalVersion: remoteJournalVersion,
+                           lastLocalJournalChangePushed: lastLocalJournalChangePushed,
                            remoteJournals: remoteJournals,
                            tailSnapshots: tailSnapshots)
         } else {
@@ -158,13 +166,6 @@ public class Session {
                                                                          "local.journal" : journalFileWrapper])
         
         var remoteFolderFileWrappers: [String : FileWrapper] = [:]
-        remoteJournalMetadata.forEach { keyValue in
-            let identifier = keyValue.key
-            let metadata = keyValue.value
-            
-            let metadataData = try! encoder.encode(metadata)
-            remoteFolderFileWrappers["\(identifier).metadata"] = FileWrapper(regularFileWithContents: metadataData)
-        }
         remoteJournals.forEach { keyValue in
             let identifier = keyValue.key
             let journal = keyValue.value
@@ -173,6 +174,11 @@ public class Session {
             remoteFolderFileWrappers["\(identifier).journal"] = FileWrapper(regularFileWithContents: journalData)
         }
         
+        let remoteJournalVersionData = try! encoder.encode(remoteJournalVersion)
+        remoteFolderFileWrappers["info.remote-version"] = FileWrapper(regularFileWithContents: remoteJournalVersionData)
+        let lastLocalJournalChangePushedData = lastLocalJournalChangePushed.data(using: .utf8)!
+        remoteFolderFileWrappers["info.last-push"] = FileWrapper(regularFileWithContents: lastLocalJournalChangePushedData)
+
         let remoteFolderWrapper = FileWrapper(directoryWithFileWrappers: remoteFolderFileWrappers)
         
         var cacheFolderFileWrappers: [String : FileWrapper] = [:]
@@ -192,45 +198,46 @@ public class Session {
         return documentFileWrapper
     }
     
+    // New version of sync.
+    
     public func sync(remoteSessionStore: RemoteSessionStore, completionHandler: @escaping (SessionSyncResult) -> Void) {
         // Update our tailSnapshot of our local database snapshot
         tailSnapshots[database.localJournal.identifier] = database.snapshot
         
         // Make a copy of the local journal in case it changes while we're syncing
         let localJournal = database.localJournal
-        let localMetadata = database.metadata
         let localIdentifier = self.localIdentifier
-        let remoteJournalMetadata = self.remoteJournalMetadata
         
-        // The following code is broken up into blocks since they're asynchronous and must
-        // execute after each other. Essentially we do three things:
-        // 1. Get remote metadata that is newer than what we have
-        // 2. Push local journal and metadata if the remote doesn't have the latest
-        // 3. Fetch all remote journals newer than what we have
-        // 4. Merge everything, keeping in mind the date of oldest "new" diff
+        // Here's the basic algorithm:
+        // 1. Fetch a list of files in the remote path and their versions
+        // 2. If local journal is different from remote version or has not been uploaded yet,
+        //    upload it. On completion, save remote version number.
+        //    => execution goes into a dispatch group
+        // 3. For each local journal, see if local version is older than what's in the remote
+        //    or does not yet exist locally. If so, download it. On success, save remote
+        //    version number local version ledger.
+        //    => all downloads are put in a local dispatch group. Do not execute 4 until
+        //       we are done downloading.
+        // 4. Once all remote journals are downloaded, merge everything.
+        //    => execution goes into a dispatch group
+        // 5. Call completionHandler()
         
-        let doFetchRemoteJournals: ([String : JournalMetadata]) -> Void = { [weak self] fetchedMetadata in
-            // 3. Fetch all those journals that changed
-            // - for each fetchedRemoteJournalMetadata entry that isn't localIdentifier,
-            //   - see if remote diffCount differ from ours
-            //   - if so, add to list
-            // - from list above, do a copy to local cache
+        // TODO: Make this result fail entire sync even if downloads succeed?
+        var pushResult: SessionSyncResult?
+        
+        let doFetchRemoteJournals: ([String : String]) -> Void = { [weak self] fetchedVersions in
+            // 3. Fetch all those journals that differ from local version
             
-            let journalsToFetch: [String] = fetchedMetadata.filter( { keyValue in
-                let fetchedRemoteJournalMetadata = keyValue.value
+            let journalsToFetch: [String] = fetchedVersions.filter( { keyValue in
+                let fetchedVersion = keyValue.value
+                let localKnownVersion = self?.remoteJournalVersion[keyValue.key] ?? "not-found"
                 
                 let shouldFetchJournal: Bool
-                if fetchedRemoteJournalMetadata.identifier == localIdentifier {
+                if keyValue.key == localIdentifier {
                     // Never pull a local journal
                     shouldFetchJournal = false
-                } else if let localJournalMetadata = remoteJournalMetadata[fetchedRemoteJournalMetadata.identifier] {
-                    if localJournalMetadata.diffCount != fetchedRemoteJournalMetadata.diffCount {
-                        shouldFetchJournal = true
-                    } else {
-                        shouldFetchJournal = false
-                    }
                 } else {
-                    shouldFetchJournal = true
+                    shouldFetchJournal = localKnownVersion != fetchedVersion
                 }
 
                 return shouldFetchJournal
@@ -241,20 +248,11 @@ public class Session {
                     guard let strongSelf = self else { return }
                     
                     switch response {
-                    case .success(let journals):
+                    case .success(let journalAndVersion):
                         
-                        journals.forEach { journal in
-                            // Only use the journal if the contents match the metadata. There's the possibility
-                            // that during a sync, a client is only able to upload the journal or just the metadata,
-                            // meaning that what is found remotely is invalid and needs updating.
-                            if let metadata = fetchedMetadata[journal.identifier] {
-                                let journalAndMetadataMatch = metadata.diffCount == journal.diffs.count && metadata.identifier == journal.identifier
-                                
-                                if journalAndMetadataMatch {
-                                    strongSelf.remoteJournalMetadata[journal.identifier] = fetchedMetadata[journal.identifier]
-                                    strongSelf.remoteJournals[journal.identifier] = journal
-                                }
-                            }
+                        journalAndVersion.forEach { journalAndVersion in
+                            strongSelf.remoteJournals[journalAndVersion.journal.identifier] = journalAndVersion.journal
+                            strongSelf.remoteJournalVersion[journalAndVersion.journal.identifier] = journalAndVersion.version
                         }
 
                         // 4. Finally, do a merge
@@ -283,44 +281,54 @@ public class Session {
             }
         }
         
-        // 1. Fetch metadata newer than what we have locally
-        remoteSessionStore.fetchNewMetadata(existingMetadata: remoteJournalMetadata) { fetchMetadataResponse in
-            switch fetchMetadataResponse {
-            case .success(let fetchedMetadata):
+        // 1. Fetch file versions
+        remoteSessionStore.fetchRemoteJournalVersions() { fetchedRemoteJournalVersionsResponse in
+            
+            switch fetchedRemoteJournalVersionsResponse {
+            case .success(let fetchedVersions):
                 // 2. Decide if we should "push" local file to remote
-                // - if fetchedMetadata[localIdentifier] doesn't exist
-                // - or if its diffCount is not same as ours (ours is newer)
+                // - if fetchedRemoteJournalVersions[localIdentifier] doesn't exist or is different
+                //   from local one
                 let shouldPushLocalJournal: Bool
-                if let fetchedLocalMetadata = fetchedMetadata[localIdentifier] {
-                    if fetchedLocalMetadata.diffCount != localJournal.diffs.count {
-                        shouldPushLocalJournal = true
-                    } else {
-                        shouldPushLocalJournal = false
-                    }
+                if let lastDiff = self.database.localJournal.diffs.last {
+                    let dateFormatter = ISO8601DateFormatter()
+                    let lastDiffDate = dateFormatter.string(from: lastDiff.timestamp)
+                    shouldPushLocalJournal = self.lastLocalJournalChangePushed != lastDiffDate
                 } else {
-                    // No remote copy, so do push
-                    shouldPushLocalJournal = true
+                    // No diffs to push yet
+                    shouldPushLocalJournal = false
                 }
-                
+
                 if shouldPushLocalJournal {
-                    remoteSessionStore.push(localJournal: localJournal,
-                                            localMetadata: localMetadata) { pushResponse in
+                    remoteSessionStore.push(localJournal: localJournal) { pushResponse in
                         switch pushResponse {
-                        case .success:
+                        case .success(let version):
                             // Push succeeded.
-                            doFetchRemoteJournals(fetchedMetadata)
+                            pushResult = .success
+                            
+                            if let lastDiff = self.database.localJournal.diffs.last {
+                                let dateFormatter = ISO8601DateFormatter()
+                                let lastDiffDate = dateFormatter.string(from: lastDiff.timestamp)
+                                self.lastLocalJournalChangePushed = lastDiffDate
+                            } else {
+                                assertionFailure()
+                            }
+
+                            self.remoteJournalVersion[localIdentifier] = version
                             
                         case .failure(let reason):
-                            completionHandler(.failure(reason: reason))
+                            pushResult = .failure(reason: reason)
                         }
                     }
                 } else {
-                    doFetchRemoteJournals(fetchedMetadata)
+                    pushResult = .success
                 }
-
+                doFetchRemoteJournals(fetchedVersions)
+                
             case .failure(let reason):
                 completionHandler(.failure(reason: reason))
             }
         }
     }
+
 }
