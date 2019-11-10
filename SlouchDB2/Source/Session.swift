@@ -103,7 +103,7 @@ public class Session {
                                 assertionFailure()
                             }
                         } else if filename == "info.last-push" {
-                            if let decodedLastLocalJournalChangePushed: String = try? String(data: data, encoding: .utf8) {
+                            if let decodedLastLocalJournalChangePushed: String = String(data: data, encoding: .utf8) {
                                 lastLocalJournalChangePushed = decodedLastLocalJournalChangePushed
                             } else {
                                 assertionFailure()
